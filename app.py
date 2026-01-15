@@ -1,26 +1,50 @@
 from flask import Flask, render_template, url_for
-from __future__ import print_statement
-import time
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import swagger_client
 from swagger_client.rest import ApiException
 from pprint import pprint
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-# Configure OAuth2 access token for authorization: strava_oauth
-swagger_client.configuration.access_token = 'YOUR_ACCESS_TOKEN'
+swagger_client.configuration.access_token = os.getenv('STRAVA_ACCESS_TOKEN')
 
-# create an instance of the API class
 api_instance = swagger_client.ActivitiesApi()
-id = 789 # Long | The identifier of the activity.
-includeAllEfforts = true # Boolean | To include all segments efforts. (optional)
 
-try: 
-    # Get Activity
-    api_response = api_instance.getActivityById(id, includeAllEfforts=includeAllEfforts)
-    pprint(api_response)
+try:
+    activities = api_instance.get_logged_in_athlete_activities()
+    for activity in activities:
+        print(activity.name, activity.distance)
 except ApiException as e:
-    print("Exception when calling ActivitiesApi->getActivityById: %s\n" % e)
+    print(f"Exception: {e}")
+
+class Activity(db.Model):
+    table_name = 'activities'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    description = db.Column(db.String(200), nullable=True)
+    distance = db.Column(db.Integer, nullable=False)
+    moving_time = db.Column(db.Integer, nullable=False)
+    type = db.Column(db.String(50), nullable=False)
+    total_elevation_gain = db.Column(db.Integer, nullable=True)
+    start_date_local = db.Column(db.DateTime, nullable=False)
+    city = db.Column(db.String(100), nullable=True)
+    state = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    device_name = db.Column(db.String(100), nullable=True)
+
+    def __repr__(self):
+        return f'<Activity {self.name}>'
+    
+
 
 @app.route('/')
 def index():

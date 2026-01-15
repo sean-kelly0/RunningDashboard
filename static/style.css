@@ -11,7 +11,7 @@ html, body {
     flex-direction: column;
 }
 
-#nav {
+nav {
     color: #fff;
     background-color: #333;
     padding: 10px 20px;
@@ -20,17 +20,25 @@ html, body {
     align-items: center;
 }
 
-#nav a {
+nav a {
     color: #fff;
     margin: 0 15px;
     text-decoration: none;
     padding: 8px 12px;
 }
 
-#nav ul {
+nav ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
     display: flex;
     gap: 15px;
+}
+
+footer, footer a{
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: auto;
 }

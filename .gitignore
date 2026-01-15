@@ -1,1 +1,6 @@
-venv
+.env
+venv/
+__pycache__/
+*.db
+swagger_client/
+strava-client/
