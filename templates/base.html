@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='/strava-logo.png') }}">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+    {% endblock %}
+</head>
+<body>
+    {% block nav %}
+    <nav>
+        <h1>Seán Kelly's Strava Dashboard</h1>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/activities">Activities</a></li>
+            <li><a href="/sync_activities">Sync Activities</a></li>
+        </ul>
+    </nav>
+    {% endblock %}
+    {% block content %}
+    {% endblock %}
+    {% block footer %}
+    <footer>
+        <p>Developed by Seán Kelly (2026) - <a href="https://github.com/sean-kelly0/RunningDashboard">GitHub Repo</a> - <a href="https://www.strava.com/athletes/62420116">Athlete Profile</a> - <a href="/exchange_tokens">Exchange API Token</a></p>
+    </footer>
+    {% endblock %}
+</body>
+</html>
