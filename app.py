@@ -2,11 +2,13 @@ from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import swagger_client
-from swagger_client.rest import ApiException
+from swagger_client.swagger_client.rest import ApiException
 from pprint import pprint
 from dotenv import load_dotenv
 import os
 import requests
+from strava_auth import configure_strava_client
+
 
 load_dotenv()
 
@@ -16,7 +18,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 class Activity(db.Model):
-    __tablename__ = 'activities'
+    __tablename__ = 'activity'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
@@ -44,31 +46,39 @@ def activities():
 
 @app.route('/sync_activities')
 def sync_activities():
-    swagger_client.configuration.access_token = os.getenv('STRAVA_ACCESS_TOKEN')
-    api_instance = swagger_client.ActivitiesApi()
-    
     try:
-        # Fetch activities from Strava
+        from strava_auth import configure_strava_client
+        from swagger_client.swagger_client import api_client
+        
+        config = configure_strava_client()
+        
+        api_client_instance = api_client.ApiClient(config)
+        
+        api_instance = swagger_client.swagger_client.ActivitiesApi(api_client_instance)
+        
+        print(f"Using token: {config.access_token[:20]}...")
+        
         strava_activities = api_instance.get_logged_in_athlete_activities(per_page=30)
         
         activities_added = 0
         
         for strava_activity in strava_activities:
-            # Check if activity already exists
             existing = Activity.query.filter_by(id=strava_activity.id).first()
             
             if not existing:
-                # Create new activity record
                 activity = Activity(
                     id=strava_activity.id,
                     name=strava_activity.name,
-                    description=strava_activity.description or '',
+                    description=getattr(strava_activity, 'description', None) or '',
                     distance=int(strava_activity.distance),
                     moving_time=strava_activity.moving_time,
                     type=strava_activity.type,
-                    total_elevation_gain=int(strava_activity.total_elevation_gain) if strava_activity.total_elevation_gain else 0,
+                    total_elevation_gain=int(getattr(strava_activity, 'total_elevation_gain', 0) or 0),
                     start_date_local=strava_activity.start_date_local,
-                    device_name=strava_activity.device_name if hasattr(strava_activity, 'device_name') else None
+                    city=getattr(strava_activity, 'city', None),
+                    state=getattr(strava_activity, 'state', None),
+                    country=getattr(strava_activity, 'country', None),
+                    device_name=getattr(strava_activity, 'device_name', None)
                 )
                 
                 db.session.add(activity)
@@ -78,7 +88,7 @@ def sync_activities():
         
         return f"Successfully synced! Added {activities_added} new activities."
         
-    except ApiException as e:
+    except swagger_client.swagger_client.rest.ApiException as e:
         return f"Error fetching activities: {e}"
     except Exception as e:
         db.session.rollback()
@@ -87,6 +97,9 @@ def sync_activities():
 @app.route('/exchange_token')
 def exchange_token():
     code = request.args.get('code')
+    
+    if not code:
+        return "Error: No authorization code provided"
     
     response = requests.post(
         'https://www.strava.com/oauth/token',
@@ -99,10 +112,24 @@ def exchange_token():
     )
     
     token_data = response.json()
-    print(f"Access Token: {token_data['access_token']}")
-    print(f"Refresh Token: {token_data['refresh_token']}")
     
-    return "Token received! Check your console and update your .env file"
+    if 'errors' in token_data or 'access_token' not in token_data:
+        print(f"Error from Strava: {token_data}")
+        return f"Error: {token_data.get('message', 'Failed to exchange token')}"
+    
+    access_token = token_data['access_token']
+    refresh_token = token_data['refresh_token']
+    
+    from strava_auth import update_env_file
+    
+    update_env_file('STRAVA_ACCESS_TOKEN', access_token)
+    update_env_file('STRAVA_REFRESH_TOKEN', refresh_token)
+    
+    print(f"✓ Tokens saved to .env file")
+    print(f"Access Token: {access_token}")
+    print(f"Refresh Token: {refresh_token}")
+    
+    return "Token received and saved to .env file! You're all set."
 
 if __name__ == '__main__':
     app.run(debug=True)
