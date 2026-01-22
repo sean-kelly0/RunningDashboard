@@ -4,3 +4,7 @@ __pycache__/
 *.db
 swagger_client/
 strava-client/
+
+token_check.py
+script.py
+.DS_Store
