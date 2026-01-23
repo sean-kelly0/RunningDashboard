@@ -4,7 +4,39 @@
 
 {% block content %}
 <main>
-    <h1>Activities</h1>
-</main>
+    <h1>My Activities</h1>
+    
+    <div class="summary-card">
+        <h2>Summary</h2>
+        <p><strong>Total Activities:</strong> {{ total_runs }}</p>
+        <p><strong>Total Distance:</strong> {{ total_distance }} km</p>
+    </div>
 
-{% endblock %}      
+    <table class="stats-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Distance (km)</th>
+                <th>Time</th>
+                <th>Elevation (m)</th>
+                <th>Device</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activity in activities %}
+            <tr>
+                <td>{{ activity.start_date_local.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><a href="{{ url_for('activity_detail', activity_id=activity.id) }}">{{ activity.name }}</a></td>
+                <td>{{ activity.type }}</td>
+                <td>{{ (activity.distance / 1000)|round(2) }}</td>
+                <td>{{ (activity.moving_time // 60)|int }} min</td>
+                <td>{{ activity.total_elevation_gain }}</td>
+                <td>{{ activity.device_name or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

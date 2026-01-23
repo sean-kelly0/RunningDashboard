@@ -4,9 +4,96 @@
 
 {% block content %}
 <main>
-    <h1>Overview</h1>
-    <p>Runs (YTD): </p>
-    <p>Distance (YTD): </p>
-    <p>Total Time (YTD): </p>
+    <h1>Running Statistics</h1>
+
+    {% if stats %}
+        <div class="stat-grid">
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.total_runs }}</div>
+                <div class="stat-label">Total Activities</div>
+            </div>
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.total_distance }}</div>
+                <div class="stat-label">Total Distance (km)</div>
+            </div>
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.total_time }}</div>
+                <div class="stat-label">Total Time (hours)</div>
+            </div>
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.total_elevation }}</div>
+                <div class="stat-label">Total Elevation (m)</div>
+            </div>
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.avg_distance }}</div>
+                <div class="stat-label">Avg Distance (km)</div>
+            </div>
+            <div class="stat-card stat-item">
+                <div class="stat-value">{{ stats.avg_pace }}</div>
+                <div class="stat-label">Avg Pace (min/km)</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h2>Activity Types</h2>
+            <ul class="activity-types-list">
+                {% for type, count in stats.activity_types.items() %}
+                    <li>{{ type }}: {{ count }} activities</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="stat-card">
+            <h2>Monthly Breakdown</h2>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Activities</th>
+                        <th>Distance (km)</th>
+                        <th>Time (hours)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month, data in stats.monthly_stats.items() %}
+                    <tr>
+                        <td>{{ month }}</td>
+                        <td>{{ data.count }}</td>
+                        <td>{{ data.distance|round(2) }}</td>
+                        <td>{{ data.time|round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stat-card">
+            <h2>Recent Activities</h2>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Distance (km)</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in stats.recent_activities %}
+                    <tr>
+                        <td>{{ activity.start_date_local.strftime('%Y-%m-%d') }}</td>
+                        <td><a href="{{ url_for('activity_detail', activity_id=activity.id) }}">{{ activity.name }}</a></td>
+                        <td>{{ activity.type }}</td>
+                        <td>{{ (activity.distance / 1000)|round(2) }}</td>
+                        <td>{{ (activity.moving_time // 60)|int }} min</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="no-data">No activities found. <a href="/sync_activities">Sync your activities</a> first.</p>
+    {% endif %}
 </main>
-{% endblock %}      
+{% endblock %}

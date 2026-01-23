@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ activity.name }} - Running Dashboard{% endblock %}
+
+{% block content %}
+{% if activity %}
+    <main>
+            <p>{{ activity.start_date_local.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p>{{ activity.name }}</p>
+            <p>{{ activity.type }}</p>
+            <p>{{ (activity.distance / 1000)|round(2) }}</p>
+            <p>{{ (activity.moving_time // 60)|int }} min</p>
+            <p>{{ activity.total_elevation_gain }}</p>
+            <p>{{ activity.device_name or 'N/A' }}</p>
+    </main>
+{% else %}
+    <p class="no-data">Activity not found. <a href="/sync_activities">Sync your activities</a> first.</p>
+{% endif %}
+{% endblock %}
