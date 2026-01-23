@@ -36,13 +36,66 @@ class Activity(db.Model):
     def __repr__(self):
         return f'<Activity {self.name}>'
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 @app.route('/activities')
 def activities():
-    return render_template('activities.html')
+    all_activities = Activity.query.order_by(Activity.start_date_local.desc()).all()
+    
+    total_distance = sum(a.distance for a in all_activities) / 1000  # km
+    total_runs = len(all_activities)
+    
+    return render_template('activities.html', 
+                         activities=all_activities,
+                         total_distance=round(total_distance, 2),
+                         total_runs=total_runs)
+
+@app.route('/activity/<int:activity_id>')
+def activity_detail(activity_id):
+    activity = Activity.query.get_or_404(activity_id)
+    return render_template('activity_detail.html', activity=activity)
+
+@app.route('/')
+def stats():
+    activities = Activity.query.all()
+    
+    if not activities:
+        return render_template('stats.html', stats=None)
+    
+    total_distance = sum(a.distance for a in activities) / 1000  
+    total_time = sum(a.moving_time for a in activities) / 3600  
+    total_elevation = sum(a.total_elevation_gain or 0 for a in activities)
+    total_runs = len(activities)
+    
+    avg_distance = total_distance / total_runs if total_runs > 0 else 0
+    avg_pace = (total_time * 60) / total_distance if total_distance > 0 else 0  
+    
+    activity_types = {}
+    for a in activities:
+        activity_types[a.type] = activity_types.get(a.type, 0) + 1
+    
+    recent_activities = Activity.query.order_by(Activity.start_date_local.desc()).limit(10).all()
+    
+    from collections import defaultdict
+    monthly_stats = defaultdict(lambda: {'distance': 0, 'count': 0, 'time': 0})
+    
+    for a in activities:
+        month_key = a.start_date_local.strftime('%Y-%m')
+        monthly_stats[month_key]['distance'] += a.distance / 1000
+        monthly_stats[month_key]['count'] += 1
+        monthly_stats[month_key]['time'] += a.moving_time / 3600
+    
+    stats = {
+        'total_distance': round(total_distance, 2),
+        'total_time': round(total_time, 2),
+        'total_elevation': total_elevation,
+        'total_runs': total_runs,
+        'avg_distance': round(avg_distance, 2),
+        'avg_pace': round(avg_pace, 2),
+        'activity_types': activity_types,
+        'recent_activities': recent_activities,
+        'monthly_stats': dict(sorted(monthly_stats.items(), reverse=True))
+    }
+
+    return render_template('index.html', stats=stats)
 
 @app.route('/sync_activities')
 def sync_activities():
@@ -58,7 +111,7 @@ def sync_activities():
         
         print(f"Using token: {config.access_token[:20]}...")
         
-        strava_activities = api_instance.get_logged_in_athlete_activities(per_page=30)
+        strava_activities = api_instance.get_logged_in_athlete_activities(per_page=200)
         
         activities_added = 0
         
