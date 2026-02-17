@@ -2,7 +2,7 @@ from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import swagger_client
-from swagger_client.swagger_client.rest import ApiException
+from swagger_client.rest import ApiException
 from pprint import pprint
 from dotenv import load_dotenv
 import os
@@ -101,13 +101,13 @@ def stats():
 def sync_activities():
     try:
         from strava_auth import configure_strava_client
-        from swagger_client.swagger_client import api_client
-        
+        from swagger_client import api_client
+
         config = configure_strava_client()
-        
+
         api_client_instance = api_client.ApiClient(config)
-        
-        api_instance = swagger_client.swagger_client.ActivitiesApi(api_client_instance)
+
+        api_instance = swagger_client.ActivitiesApi(api_client_instance)
         
         print(f"Using token: {config.access_token[:20]}...")
         
@@ -140,8 +140,9 @@ def sync_activities():
         db.session.commit()
         
         return f"Successfully synced! Added {activities_added} new activities."
+        return f"Return to <a href='{url_for('stats')}'>Home</a>"
         
-    except swagger_client.swagger_client.rest.ApiException as e:
+    except swagger_client.rest.ApiException as e:
         return f"Error fetching activities: {e}"
     except Exception as e:
         db.session.rollback()

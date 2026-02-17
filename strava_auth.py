@@ -1,6 +1,6 @@
 import os
 import requests
-from swagger_client.swagger_client.configuration import Configuration
+from swagger_client.configuration import Configuration
 
 config = Configuration()
 
