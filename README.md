@@ -20,8 +20,8 @@ A personal running dashboard that pulls activity data from Strava's API to provi
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd RunningDash
+git clone https://github.com/sean-kelly0/RunningDashboard.git
+cd RunningDashboard
 ```
 
 ### 2. Create and activate a virtual environment
