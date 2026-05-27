@@ -37,7 +37,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Generate the Strava Swagger client
+### 4. Generate the Strava API client
 
 The Strava API client is generated from their official Swagger spec and is not included in the repository.
 
@@ -46,7 +46,7 @@ chmod +x setup_swagger.sh
 ./setup_swagger.sh
 ```
 
-This will download the Strava Swagger spec, generate a Python client into `./swagger_client/`, and install it into your virtual environment.
+This downloads the Strava Swagger spec, generates a Python client into `./swagger_client/`, and installs it into your virtual environment.
 
 ### 5. Create a Strava API application
 
@@ -57,7 +57,13 @@ This will download the Strava Swagger spec, generate a Python client into `./swa
 
 ### 6. Create a `.env` file
 
-Create a `.env` file in the project root with the following keys:
+Copy the example file and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and set your values:
 
 ```env
 STRAVA_CLIENT_ID=your_client_id

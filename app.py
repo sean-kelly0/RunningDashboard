@@ -1,4 +1,8 @@
-from flask import Flask, render_template, url_for, request, redirect
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'swagger_client'))
+
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import swagger_client
@@ -140,7 +144,6 @@ def sync_activities():
         db.session.commit()
         
         return f"Successfully synced! Added {activities_added} new activities."
-        return f"Return to <a href='{url_for('stats')}'>Home</a>"
         
     except swagger_client.rest.ApiException as e:
         return f"Error fetching activities: {e}"

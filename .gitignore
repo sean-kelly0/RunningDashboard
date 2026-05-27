@@ -2,9 +2,6 @@
 venv/
 __pycache__/
 *.db
-swagger_client/
-strava-client/
-
-token_check.py
-script.py
 .DS_Store
+swagger.json
+swagger_client/
